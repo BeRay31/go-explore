@@ -1,15 +1,13 @@
-package main
+package rate_limiter
 
 import (
 	"fmt"
 	"math/rand"
 	"time"
-
-	"poc-example.com/rate_limiter"
 )
 
 func main() {
-	rl := rate_limiter.NewRateLimiter(2, 3*time.Second)
+	rl := NewRateLimiter(2, 3*time.Second)
 	// Test without concurrency
 	// for i := 1; i <= 7; i++ {
 	// 	time.Sleep(1 * time.Second)
