@@ -6,17 +6,24 @@ import (
 )
 
 // sliding window rate limiter
+type RLProps struct {
+	reqs     []time.Time
+	mu       sync.Mutex
+	clientId string
+}
+
 type RateLimiter struct {
-	size   int
-	window time.Duration
-	reqs   []time.Time
-	mu     sync.Mutex
+	size    int
+	window  time.Duration
+	clients map[string]*RLProps
+	mu      sync.Mutex
 }
 
 func NewRateLimiter(size int, window time.Duration) *RateLimiter {
 	rl := &RateLimiter{
-		size:   size,
-		window: window,
+		size:    size,
+		window:  window,
+		clients: map[string]*RLProps{},
 	}
 	ticker := time.NewTicker(rl.window)
 	go func() {
@@ -28,22 +35,38 @@ func NewRateLimiter(size int, window time.Duration) *RateLimiter {
 }
 
 func (rl *RateLimiter) cleanup() {
+	// clean each clients
 	rl.mu.Lock()
-	now := time.Now()
-	for i := 0; i < len(rl.reqs); i++ {
-		if now.Sub(rl.reqs[i]) > rl.window {
-			rl.reqs = rl.reqs[i+1:]
-		}
+	defer rl.mu.Unlock()
+	for _, client := range rl.clients {
+		go func() {
+			client.mu.Lock()
+			now := time.Now()
+			for i := 0; i < len(client.reqs); i++ {
+				if now.Sub(client.reqs[i]) > rl.window {
+					client.reqs = client.reqs[i+1:]
+				}
+			}
+			client.mu.Unlock()
+		}()
 	}
-	rl.mu.Unlock()
 }
 
-func (rl *RateLimiter) Allow() bool {
-	reqTime := time.Now()
-	if len(rl.reqs) < rl.size {
+func (rl *RateLimiter) Allow(clientId string) bool {
+	if rl.clients[clientId] == nil { // client not yet established
 		rl.mu.Lock()
-		rl.reqs = append(rl.reqs, reqTime)
-		rl.mu.Unlock()
+		rl.clients[clientId] = &RLProps{
+			reqs:     []time.Time{},
+			clientId: clientId,
+		}
+		defer rl.mu.Unlock()
+	}
+	client := rl.clients[clientId]
+	reqTime := time.Now()
+	if len(client.reqs) < rl.size {
+		client.mu.Lock()
+		defer client.mu.Unlock()
+		client.reqs = append(client.reqs, reqTime)
 		return true
 	}
 	return false

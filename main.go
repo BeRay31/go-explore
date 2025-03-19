@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	rl := rate_limiter.NewRateLimiter(30, 3*time.Second)
+	rl := rate_limiter.NewRateLimiter(2, 3*time.Second)
 	// Test without concurrency
 	// for i := 1; i <= 7; i++ {
 	// 	time.Sleep(1 * time.Second)
@@ -23,8 +23,8 @@ func main() {
 		go func() {
 			for j := range jobs {
 				time.Sleep(time.Duration(rand.Intn(10)) * time.Second)
-				isAllowed := rl.Allow()
-				fmt.Printf("Request %d: at %v, Allowed? %v\n", j, time.Now().Second(), rl.Allow())
+				isAllowed := rl.Allow(fmt.Sprintf("client-%d", j%20))
+				fmt.Printf("Request client %d: at %v, Allowed? %v\n", j%20, time.Now().Second(), isAllowed)
 				done <- isAllowed
 			}
 		}()
