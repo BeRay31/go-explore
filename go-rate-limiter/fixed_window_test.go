@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"beray-explore.com/rate_limiter"
+	rate_limiter "beray-explore.com"
 )
 
 func TestAllowSequential(t *testing.T) {

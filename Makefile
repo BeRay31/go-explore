@@ -1,2 +1,2 @@
 test:
-	go test -coverprofile coverage ./...
+	cd $(dir) && $(MAKE) test
