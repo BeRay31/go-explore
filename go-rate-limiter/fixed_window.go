@@ -8,7 +8,7 @@ func NewFixedRateLimiter(size int, window time.Duration) *FixedRateLimiter {
 	rl := &FixedRateLimiter{
 		size:    size,
 		window:  window,
-		clients: map[string]*RLProps{},
+		Clients: map[string]*RLProps{},
 	}
 	ticker := time.NewTicker(rl.window)
 	go func() {
@@ -20,16 +20,16 @@ func NewFixedRateLimiter(size int, window time.Duration) *FixedRateLimiter {
 }
 
 func (rl *FixedRateLimiter) cleanup() {
-	// clean each clients
+	// clean each Clients
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
-	for _, client := range rl.clients {
+	for _, client := range rl.Clients {
 		go func() {
 			client.mu.Lock()
 			now := time.Now()
-			for i := 0; i < len(client.reqs); i++ {
-				if now.Sub(client.reqs[i]) > rl.window {
-					client.reqs = client.reqs[i+1:]
+			for i := 0; i < len(client.Reqs); i++ {
+				if now.Sub(client.Reqs[i]) > rl.window {
+					client.Reqs = client.Reqs[i+1:]
 				}
 			}
 			client.mu.Unlock()
@@ -38,20 +38,20 @@ func (rl *FixedRateLimiter) cleanup() {
 }
 
 func (rl *FixedRateLimiter) Allow(clientId string) bool {
-	if rl.clients[clientId] == nil { // client not yet established
+	if rl.Clients[clientId] == nil { // client not yet established
 		rl.mu.Lock()
-		rl.clients[clientId] = &RLProps{
-			reqs:     []time.Time{},
+		rl.Clients[clientId] = &RLProps{
+			Reqs:     []time.Time{},
 			clientId: clientId,
 		}
 		defer rl.mu.Unlock()
 	}
-	client := rl.clients[clientId]
+	client := rl.Clients[clientId]
 	reqTime := time.Now()
-	if len(client.reqs) < rl.size {
+	if len(client.Reqs) < rl.size {
 		client.mu.Lock()
 		defer client.mu.Unlock()
-		client.reqs = append(client.reqs, reqTime)
+		client.Reqs = append(client.Reqs, reqTime)
 		return true
 	}
 	return false

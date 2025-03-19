@@ -6,18 +6,25 @@ import (
 )
 
 type RLProps struct {
-	reqs     []time.Time
+	Reqs     []time.Time
 	mu       sync.Mutex
 	clientId string
 }
 
-type RateLimiter struct {
+type FixedRateLimiter struct {
 	size    int
 	window  time.Duration
-	clients map[string]*RLProps
+	Clients map[string]*RLProps
 	mu      sync.Mutex
 }
 
-type FixedRateLimiter RateLimiter
+type SlidingRateLimiter struct {
+	size    int
+	window  time.Duration
+	Clients map[string]*RLProps
+	mu      sync.Mutex
+}
 
-type SlidingRateLimiter RateLimiter
+type RateLimiter interface {
+	Allow(clientId string) bool
+}
