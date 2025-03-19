@@ -9,7 +9,7 @@ import (
 )
 
 func TestAllowSequential(t *testing.T) {
-	rl := rate_limiter.NewRateLimiter(2, 2*time.Second)
+	rl := rate_limiter.NewFixedRateLimiter(2, 2*time.Second)
 	clientId := "client-1"
 
 	if !rl.Allow(clientId) {
@@ -30,7 +30,7 @@ func TestAllowSequential(t *testing.T) {
 }
 
 func TestAllowConcurrent(t *testing.T) {
-	rl := rate_limiter.NewRateLimiter(2, 3*time.Second)
+	rl := rate_limiter.NewFixedRateLimiter(2, 3*time.Second)
 	clientId := "client-1"
 	var wg sync.WaitGroup
 	results := make(chan bool, 4)

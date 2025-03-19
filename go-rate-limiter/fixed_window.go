@@ -1,26 +1,11 @@
 package rate_limiter
 
 import (
-	"sync"
 	"time"
 )
 
-// sliding window rate limiter
-type RLProps struct {
-	reqs     []time.Time
-	mu       sync.Mutex
-	clientId string
-}
-
-type RateLimiter struct {
-	size    int
-	window  time.Duration
-	clients map[string]*RLProps
-	mu      sync.Mutex
-}
-
-func NewRateLimiter(size int, window time.Duration) *RateLimiter {
-	rl := &RateLimiter{
+func NewFixedRateLimiter(size int, window time.Duration) *FixedRateLimiter {
+	rl := &FixedRateLimiter{
 		size:    size,
 		window:  window,
 		clients: map[string]*RLProps{},
@@ -34,7 +19,7 @@ func NewRateLimiter(size int, window time.Duration) *RateLimiter {
 	return rl
 }
 
-func (rl *RateLimiter) cleanup() {
+func (rl *FixedRateLimiter) cleanup() {
 	// clean each clients
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
@@ -52,7 +37,7 @@ func (rl *RateLimiter) cleanup() {
 	}
 }
 
-func (rl *RateLimiter) Allow(clientId string) bool {
+func (rl *FixedRateLimiter) Allow(clientId string) bool {
 	if rl.clients[clientId] == nil { // client not yet established
 		rl.mu.Lock()
 		rl.clients[clientId] = &RLProps{
