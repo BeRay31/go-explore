@@ -25,7 +25,6 @@ func TestCleanup(t *testing.T) {
 
 	// Call cleanup after 3 seconds
 	time.Sleep(3 * time.Second)
-	rl.Cleanup(clientId, time.Now())
 	rl.Allow(clientId)
 
 	// Verify that old requests are removed

@@ -14,7 +14,7 @@ func NewSlidingRateLimiter(size int, window time.Duration) *SlidingRateLimiter {
 }
 
 // Sliding window part
-func (rl *SlidingRateLimiter) Cleanup(clientId string, timeNow time.Time) {
+func (rl *SlidingRateLimiter) cleanup(clientId string, timeNow time.Time) {
 	// clean each Clients
 	rl.Clients[clientId].mu.Lock()
 	defer rl.Clients[clientId].mu.Unlock()
@@ -39,7 +39,7 @@ func (rl *SlidingRateLimiter) Allow(clientId string) bool {
 
 	client := rl.Clients[clientId]
 	reqTime := time.Now()
-	rl.Cleanup(client.clientId, reqTime)
+	rl.cleanup(client.clientId, reqTime)
 	if len(client.Reqs) < rl.size {
 		client.mu.Lock()
 		defer client.mu.Unlock()
